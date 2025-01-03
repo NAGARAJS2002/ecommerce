@@ -15,7 +15,8 @@ const userSchema  = new mongoose.Schema({
     password: {
         type:String,
         required: [true,'Please enter password'],
-        maxlength: [6, 'Password cannot exceed 6 characters']
+        maxlength: [6, 'Password cannot exceed 6 characters'],
+        select:false
     },
 
     avatar: {
@@ -36,8 +37,11 @@ userSchema.pre('save', async function(){
 userSchema.methods.getJwtToken = function()  {
   return  jwt.sign({id : this.id}, JWT_SECRET,{
         expiresIn: JWT_EXPIRES_TIME
-    })
-       
+    })     
+}
+
+userSchema.methods.isValidPassword = async function(enteredPassword){
+    return  bcryptjs.compare(enteredPassword, this.password)
 }
 
 
