@@ -21,10 +21,7 @@ export const register =  async (req,res,next) => {
             username,
             email,
             password,
-            avatar:{
-               public_id: uploadFile.public_id,
-               url: uploadFile.secure_url}
-           });
+            avatar: uploadFile.secure_url});
            
           sendToken(user,201,res);
             
@@ -42,7 +39,7 @@ export const login = async (req,res,next) => {
       }
       const user = await User.findOne({email:email}).select('+password')
       if(!user){
-         return next(errorHandler(' invalid email or password',401));
+         return next(new errorHandler(' invalid email or password',401));
       }
       if(!await user.isValidPassword(password)){
          return next(new errorHandler('Invalid email or password', 401))
@@ -106,38 +103,101 @@ export const changePassword = async (req,res,next) => {
 
 //update user profile 
 
-// export const updateProfile = async (req,res,next) => {
-//    try {
-//       const newUserData = {
-//          username: req.body.username,
-//          email: req.body.email
-//       }
-//          const file = req.file
-     
-//          const user = await User.findById(req.user.id);
-//          await v2.uploader.destroy(user.avatar.public_id);
+export const updateProfile = async (req, res, next) => {
+try {
+      const newUserData = {
+         username: req.body.username,
+         email: req.body.email
+      }
+     const file = req.file;
+     if (file !== "") {
+       const user = await User.findById(req.user.id);
+        await v2.uploader.destroy(user.avatar);
 
-//          const imagePath = file.path;
-//          const uploadFile = await v2.uploader.upload(imagePath,{
-//             folder: 'avatar'
-//          });
-//          const avatar ={
-//             public_id: uploadFile.public_id,
-//             url: uploadFile.secure_url
-//            }
+       const  imagePath = file.path;
+        const uploadFile = await v2.uploader.upload(imagePath,{
+         folder: "avatar"
+        });
 
-//            const newData = {newUserData,avatar }
+        newUserData.avatar = uploadFile.secure_url
+     }
+
+     await User.findByIdAndUpdate(req.user.id , newUserData,{
+      new: true,
+      runValidators: true,
+      useFindAndModify: true,
+     });
+     res.status(200).json({
+      success: true,
+  });
+} catch (error) {
+   next(error)
+}
+};
+
+export const getAllUsers = async (req, res, next) => {
+   try {
+      const users = await User.find();
+   res.status(200).json({
+        success: true,
+        users
+   })
+   } catch (error) {
+      next(error)
+   }
+}
 
 
-//            await User.findByIdAndDelete(req.user.id,newData ,{
-//             new: true,
-//             runValidators: true,
-//          });
-//            res.status(20).json({
-//             success:true
-//            })
-   
-//    } catch (error) {
-//       next(error)
-//    }
-// }
+export const getUser = async (req,res,next) => {
+   try {
+      const user = await User.findById(req.params.id);
+      if(!user) {
+          return next(new ErrorHandler(`User not found with this id ${req.params.id}`))
+      }
+      res.status(200).json({
+          success: true,
+          user
+     })
+      
+   } catch (error) {
+      next(error)
+   }
+}
+
+
+export const updateUser = async (req,res,next) => {
+   try {
+      const newUserData = {
+         name: req.body.name,
+         email: req.body.email,
+         role: req.body.role
+     }
+ 
+     const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+         new: true,
+         runValidators: true,
+     })
+ 
+     res.status(200).json({
+         success: true,
+         user
+     })
+   } catch (error) {
+      next(error)
+   }
+}
+
+export const deleteUser = async (req,res,next) => {
+   try {
+      const user = await User.findById(req.params.id);
+      if(!user) {
+          return next(new errorHandler(`User not found with this id ${req.params.id}`))
+      }
+      await user.deleteOne();
+      res.status(200).json({
+          success: true,
+      })
+   } catch (error) {
+      next(error)
+   }
+}
