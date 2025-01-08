@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import {PORT} from "./config/index.js"
 import { errorMiddleware } from "./middlewares/error.js";
-import {authRoutes, productRoutes} from "./router/allRoutes.js";
+import {authRoutes, orderRoutes, paymentRoutes, productRoutes} from "./router/allRoutes.js";
 import connectDB from "./db/connect.js";
 
 const app = express();
@@ -17,6 +17,8 @@ app.use(errorMiddleware)
 
 app.use('/api/v1',authRoutes);
 app.use('/api/v1',productRoutes);
+app.use('/api/v1',orderRoutes);
+app.use('/api/v1',paymentRoutes);
 
 const server = app.listen(PORT,() => {
     console.log(`Server is  running on port ${PORT} `);
