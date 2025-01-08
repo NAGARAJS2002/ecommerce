@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import { changePassword,
      deleteUser,
      getAllUsers,
@@ -9,17 +10,22 @@ import { changePassword,
      register,
     updateProfile, 
     updateUser} from "../controllers/authController.js";
-import {  uploadHandler } from "../utils/multer.js";
 import { authorizeRoles, isAuthenticatedUser } from "../middlewares/auth.js";
 
 const authRoutes = express.Router();
+//multer storages
+const storage = multer.diskStorage({});
 
-authRoutes.post('/register', uploadHandler, register )
+const upload = multer({
+    storage: storage
+})
+
+authRoutes.post('/register', upload.single('avatar'), register )
 authRoutes.post('/login',login,)
 authRoutes.get('/logout', logout,)
 authRoutes.get('/getUser', isAuthenticatedUser, getUserDetails);
 authRoutes.put('/passwordChange',isAuthenticatedUser, changePassword);
-authRoutes.put('/updateProfile', isAuthenticatedUser, uploadHandler, updateProfile);
+authRoutes.put('/updateProfile', isAuthenticatedUser, upload.single('avatar'), updateProfile);
 
 //admin
 authRoutes.get('/admin/users', isAuthenticatedUser,authorizeRoles('admin'),getAllUsers);
